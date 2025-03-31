@@ -39,7 +39,7 @@ public class UserRepositoryImpl implements UserRepository {
     public List<UserDto> findAll() {
         log.debug("Получение всех пользователей");
         return users.values().stream()
-                .map(UserMapper::MapToUserDto)
+                .map(UserMapper::mapToUserDto)
                 .toList();
     }
 

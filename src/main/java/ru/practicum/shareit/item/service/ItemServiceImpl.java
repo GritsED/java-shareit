@@ -17,7 +17,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto findItem(Long id) {
         Item item = ir.findItem(id);
-        return ItemMapper.MapToItemDto(item);
+        return ItemMapper.mapToItemDto(item);
     }
 
     @Override
@@ -27,21 +27,21 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto addItem(Long userId, ItemDto itemDto) {
-        Item item = ItemMapper.MapToItem(itemDto);
+        Item item = ItemMapper.mapToItem(itemDto);
         Item item1 = ir.addItem(userId, item);
-        return ItemMapper.MapToItemDto(item1);
+        return ItemMapper.mapToItemDto(item1);
     }
 
     @Override
     public ItemDto updateItem(Long userId, ItemDto itemDto, Long itemId) {
-        Item item = ItemMapper.MapToItem(itemDto);
-        return ItemMapper.MapToItemDto(ir.updateItem(userId, item, itemId));
+        Item item = ItemMapper.mapToItem(itemDto);
+        return ItemMapper.mapToItemDto(ir.updateItem(userId, item, itemId));
     }
 
     @Override
     public List<ItemDto> searchItems(String text) {
         return ir.searchItems(text).stream()
-                .map(ItemMapper::MapToItemDto)
+                .map(ItemMapper::mapToItemDto)
                 .toList();
     }
 }

@@ -16,9 +16,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto createUser(UserDto userDto) {
-        User user = UserMapper.MapToUser(userDto);
+        User user = UserMapper.mapToUser(userDto);
         User user1 = ur.createUser(user);
-        return UserMapper.MapToUserDto(user1);
+        return UserMapper.mapToUserDto(user1);
     }
 
     @Override
@@ -34,7 +34,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto updateUser(User newUser, Long userId) {
         User user = ur.updateUser(newUser, userId);
-        return UserMapper.MapToUserDto(user);
+        return UserMapper.mapToUserDto(user);
     }
 
     @Override
