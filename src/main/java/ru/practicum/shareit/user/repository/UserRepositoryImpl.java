@@ -21,7 +21,7 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public User createUser(User user) {
         log.debug("Создание нового пользователя: {}", user);
-        emailExist(user);
+        CheckEmailExist(user);
         user.setId(getNextId());
         users.put(user.getId(), user);
         log.debug("Пользователь с Id {} создан", user.getId());
@@ -52,7 +52,7 @@ public class UserRepositoryImpl implements UserRepository {
                 oldUSer.setName(newUser.getName());
             }
             if (newUser.getEmail() != null) {
-                emailExist(newUser);
+                CheckEmailExist(newUser);
                 oldUSer.setEmail(newUser.getEmail());
             }
             return oldUSer;
@@ -67,7 +67,7 @@ public class UserRepositoryImpl implements UserRepository {
         users.remove(userId);
     }
 
-    private void emailExist(User user) {
+    private void CheckEmailExist(User user) {
         users.values()
                 .forEach(u -> {
                     if (u.getEmail().equals(user.getEmail()) && !u.getId().equals(user.getId())) {

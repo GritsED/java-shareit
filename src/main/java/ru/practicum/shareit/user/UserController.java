@@ -29,17 +29,17 @@ public class UserController {
     }
 
     @PostMapping
-    public UserDto create(@RequestBody @Valid UserDto userDto) {
+    public UserDto createUser(@RequestBody @Valid UserDto userDto) {
         return us.createUser(userDto);
     }
 
     @PatchMapping("/{userId}")
-    public UserDto update(@RequestBody User user, @PathVariable Long userId) {
+    public UserDto updateUser(@RequestBody User user, @PathVariable Long userId) {
         return us.updateUser(user, userId);
     }
 
     @DeleteMapping("/{userId}")
-    public void remove(@PathVariable Long userId) {
+    public void removeUser(@PathVariable Long userId) {
         us.removeUser(userId);
     }
 }
