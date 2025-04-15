@@ -1,7 +1,5 @@
 package ru.practicum.shareit.user;
 
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
@@ -9,37 +7,37 @@ import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
 
-/**
- * TODO Sprint add-controllers.
- */
 @RestController
-@RequiredArgsConstructor
 @RequestMapping(path = "/users")
 public class UserController {
-    private final UserService us;
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public List<UserDto> findAll() {
-        return us.findAll();
+        return userService.findAll();
     }
 
     @GetMapping("/{userId}")
     public User findUser(@PathVariable Long userId) {
-        return us.findUser(userId);
+        return userService.findUser(userId);
     }
 
     @PostMapping
-    public UserDto createUser(@RequestBody @Valid UserDto userDto) {
-        return us.createUser(userDto);
+    public UserDto createUser(@RequestBody User user) {
+        return userService.createUser(user);
     }
 
     @PatchMapping("/{userId}")
     public UserDto updateUser(@RequestBody User user, @PathVariable Long userId) {
-        return us.updateUser(user, userId);
+        return userService.updateUser(user, userId);
     }
 
     @DeleteMapping("/{userId}")
     public void removeUser(@PathVariable Long userId) {
-        us.removeUser(userId);
+        userService.removeUser(userId);
     }
 }
