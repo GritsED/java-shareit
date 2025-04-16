@@ -1,12 +1,36 @@
 package ru.practicum.shareit.booking;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.booking.dto.BookingDtoIn;
+import ru.practicum.shareit.booking.dto.BookingDtoOut;
+import ru.practicum.shareit.booking.service.BookingService;
 
-/**
- * TODO Sprint add-bookings.
- */
 @RestController
 @RequestMapping(path = "/bookings")
 public class BookingController {
+    private final BookingService bookingService;
+
+    public BookingController(BookingService bookingService) {
+        this.bookingService = bookingService;
+    }
+
+    @PostMapping
+    public BookingDtoOut createBooking(@RequestBody BookingDtoIn bookingDtoIn,
+                                       @RequestHeader("X-Sharer-User-Id") Long userId) {
+        return bookingService.createBooking(bookingDtoIn, userId);
+    }
+
+    @PatchMapping("/{bookingId}")
+    public BookingDtoOut approve(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                 @PathVariable Long bookingId,
+                                 @RequestParam Boolean approved) {
+        return bookingService.approve(userId, bookingId, approved);
+    }
+
+    @GetMapping("/{bookingId}")
+    public BookingDtoOut getBookingByUserId(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                            @PathVariable Long bookingId) {
+        return bookingService.findById(bookingId, userId);
+    }
+
 }
