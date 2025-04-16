@@ -3,6 +3,7 @@ package ru.practicum.shareit.booking.service;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingDtoIn;
 import ru.practicum.shareit.booking.dto.BookingDtoOut;
+import ru.practicum.shareit.booking.emun.BookingState;
 import ru.practicum.shareit.booking.emun.BookingStatus;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
@@ -14,6 +15,9 @@ import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class BookingServiceImpl implements BookingService {
@@ -33,7 +37,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingDtoOut createBooking(BookingDtoIn bookingDtoIn, long userId) {
-        User user = userService.findUser(userId);
+        User user = checkUser(userId);
         ItemDto item = itemService.findItem(bookingDtoIn.getItemId());
         if (!item.getAvailable()) {
             throw new ValidationException("Предмет с Id " + item.getId() + " не доступен для бронирования");
@@ -48,9 +52,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingDtoOut approve(Long userId, Long bookingId, Boolean approved) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new NotFoundException("Бронирование с Id " + bookingId + " не найдено"));
-
+        Booking booking = checkBooking(bookingId);
         Long itemOwnerId = booking.getItem().getOwner().getId();
 
         if (!itemOwnerId.equals(userId)) {
@@ -73,11 +75,66 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingDtoOut findById(Long bookingId, Long userId) {
-        User user = userService.findUser(userId);
-
-        Booking foundBooking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new NotFoundException("Бронирование с Id " + bookingId + " не найдено"));
+        checkUser(userId);
+        Booking foundBooking = checkBooking(bookingId);
         return bookingMapper.mapToBookingDto(foundBooking);
+    }
+
+    @Override
+    public List<BookingDtoOut> findAll(Long userId, String state) {
+        checkUser(userId);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Booking> bookings = switch (state.toUpperCase()) {
+            case "CURRENT" -> bookingRepository.findAllByBookerIdAndEndAfterOrderByStartDesc(userId, now);
+            case "PAST" -> bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(userId, now);
+            case "FUTURE" -> bookingRepository.findAllByBookerIdAndStartBeforeOrderByStartDesc(userId, now);
+            case "WAITING" ->
+                    bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(userId, BookingStatus.WAITING);
+            case "REJECTED" ->
+                    bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(userId, BookingStatus.REJECTED);
+            default -> bookingRepository.findAllByBookerId(userId);
+        };
+
+        return bookingMapper.mapToBookingDto(bookings);
+    }
+
+    @Override
+    public List<BookingDtoOut> findAllByItemOwner(Long userId, String state) {
+        checkUser(userId);
+
+        BookingState status = switch (state.toUpperCase()) {
+            case "CURRENT" -> BookingState.CURRENT;
+            case "PAST" -> BookingState.PAST;
+            case "FUTURE" -> BookingState.FUTURE;
+            case "WAITING" -> BookingState.WAITING;
+            case "REJECTED" -> BookingState.REJECTED;
+            default -> null;
+        };
+
+        List<Booking> bookings;
+
+        if (status == null) {
+            bookings = bookingRepository.findAllByItemOwnerIdOrderByStartDesc(userId);
+        } else {
+            bookings = bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, status);
+        }
+
+        if (bookings == null || bookings.isEmpty()) {
+            throw new NotFoundException("У вас нет предметов для аренды");
+        }
+
+        return bookingMapper.mapToBookingDto(bookings);
+    }
+
+    private User checkUser(Long id) {
+        return userService.findUser(id);
+    }
+
+    private Booking checkBooking(Long id) {
+        return bookingRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Бронирование с Id " + id + " не найдено"));
     }
 
 

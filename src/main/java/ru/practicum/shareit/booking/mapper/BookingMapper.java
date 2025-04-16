@@ -8,6 +8,8 @@ import ru.practicum.shareit.booking.dto.BookingDtoOut;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 
+import java.util.List;
+
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = ItemMapper.class)
 public interface BookingMapper {
     @Mapping(source = "booker", target = "booker")
@@ -16,4 +18,6 @@ public interface BookingMapper {
 
     @Mapping(source = "itemId", target = "item.id")
     Booking mapToBooking(BookingDtoIn bookingDtoIn);
+
+    List<BookingDtoOut> mapToBookingDto(Iterable<Booking> bookings);
 }
