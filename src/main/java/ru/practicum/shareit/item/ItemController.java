@@ -2,8 +2,9 @@ package ru.practicum.shareit.item;
 
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemDtoOwner;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.Collections;
@@ -19,12 +20,13 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItem(@PathVariable Long itemId) {
-        return itemService.findItem(itemId);
+    public ItemDto getItem(@PathVariable Long itemId,
+                           @RequestHeader("X-Sharer-User-Id") Long userId) {
+        return itemService.findItem(itemId, userId);
     }
 
     @GetMapping
-    public List<ItemDtoOwner> getItemsByUserid(@RequestHeader("X-Sharer-User-Id") long userId) {
+    public List<ItemDto> getItemsByUserid(@RequestHeader("X-Sharer-User-Id") Long userId) {
         return itemService.findUserItems(userId);
     }
 
@@ -38,13 +40,20 @@ public class ItemController {
     }
 
     @PostMapping
-    public ItemDto addItem(@RequestHeader("X-Sharer-User-Id") long userId,
+    public ItemDto addItem(@RequestHeader("X-Sharer-User-Id") Long userId,
                            @RequestBody @Valid ItemDto itemDto) {
         return itemService.addItem(userId, itemDto);
     }
 
+    @PostMapping("/{itemId}/comment")
+    public CommentDto addComment(@RequestBody Comment comment,
+                                 @PathVariable Long itemId,
+                                 @RequestHeader("X-Sharer-User-Id") Long userId) {
+        return itemService.addComment(comment, itemId, userId);
+    }
+
     @PatchMapping("/{itemId}")
-    public ItemDto updateItem(@RequestHeader("X-Sharer-User-Id") long userId,
+    public ItemDto updateItem(@RequestHeader("X-Sharer-User-Id") Long userId,
                               @RequestBody ItemDto itemDto,
                               @PathVariable Long itemId) {
         return itemService.updateItem(userId, itemDto, itemId);

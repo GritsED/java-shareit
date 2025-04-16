@@ -28,8 +28,16 @@ public class BookingDtoOut {
         this.id = id;
     }
 
+    public LocalDateTime getStart() {
+        return start;
+    }
+
     public void setStart(LocalDateTime start) {
         this.start = start;
+    }
+
+    public LocalDateTime getEnd() {
+        return end;
     }
 
     public void setEnd(LocalDateTime end) {
@@ -44,8 +52,16 @@ public class BookingDtoOut {
         this.item = item;
     }
 
+    public User getBooker() {
+        return booker;
+    }
+
     public void setBooker(User booker) {
         this.booker = booker;
+    }
+
+    public BookingStatus getStatus() {
+        return status;
     }
 
     public void setStatus(BookingStatus status) {

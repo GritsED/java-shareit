@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,6 +21,9 @@ public class ItemDto {
     @NotNull(message = "Поле \"available\" не может быть пустым")
     Boolean available;
     Long ownerId;
+    List<CommentDto> comments;
+    LocalDateTime lastBooking;
+    LocalDateTime nextBooking;
 
     public Long getId() {
         return id;
@@ -57,5 +63,29 @@ public class ItemDto {
 
     public void setOwnerId(Long ownerId) {
         this.ownerId = ownerId;
+    }
+
+    public LocalDateTime getLastBooking() {
+        return lastBooking;
+    }
+
+    public void setLastBooking(LocalDateTime lastBooking) {
+        this.lastBooking = lastBooking;
+    }
+
+    public LocalDateTime getNextBooking() {
+        return nextBooking;
+    }
+
+    public void setNextBooking(LocalDateTime nextBooking) {
+        this.nextBooking = nextBooking;
+    }
+
+    public List<CommentDto> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<CommentDto> comments) {
+        this.comments = comments;
     }
 }

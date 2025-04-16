@@ -2,14 +2,20 @@ package ru.practicum.shareit.item.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.emun.BookingStatus;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemDtoOwner;
+import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.time.LocalDateTime;
@@ -25,24 +31,49 @@ public class ItemServiceImpl implements ItemService {
     private final ItemMapper itemMapper;
     private final UserService userService;
     private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
+    private final CommentMapper commentMapper;
 
-    public ItemServiceImpl(ItemRepository itemRepository, ItemMapper itemMapper, UserService userService, BookingRepository bookingRepository) {
+    public ItemServiceImpl(ItemRepository itemRepository,
+                           ItemMapper itemMapper,
+                           UserService userService,
+                           BookingRepository bookingRepository,
+                           CommentRepository commentRepository,
+                           CommentMapper commentMapper) {
         this.itemRepository = itemRepository;
         this.itemMapper = itemMapper;
         this.userService = userService;
         this.bookingRepository = bookingRepository;
+        this.commentRepository = commentRepository;
+        this.commentMapper = commentMapper;
     }
 
     @Override
-    public ItemDto findItem(Long id) {
+    public ItemDto findItem(Long id, Long userId) {
         log.debug("Поиск вещи по id = {}", id);
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Предмет с Id " + id + " не найден"));
-        return itemMapper.mapToItemDto(item);
+        List<Comment> comments = commentRepository.findAllByItemId(id);
+
+        if (item.getOwner().getId().equals(userId)) {
+            List<Booking> lastBookings = bookingRepository.findAllByItemIdAndEndBeforeAndStatusOrderByEndDesc(id,
+                    LocalDateTime.now(),
+                    BookingStatus.APPROVED);
+
+            LocalDateTime lastBooking = lastBookings.isEmpty() ? null : lastBookings.getFirst().getEnd();
+
+            List<Booking> nextBookings = bookingRepository.findAllByItemIdAndStartAfterOrderByStartAsc(id,
+                    LocalDateTime.now());
+
+            LocalDateTime nextBooking = nextBookings.isEmpty() ? null : nextBookings.getFirst().getStart();
+
+            return itemMapper.mapToItemDto(item, lastBooking, nextBooking, commentMapper.mapToCommentDto(comments));
+        }
+        return itemMapper.mapToItemDto(item, null, null, commentMapper.mapToCommentDto(comments));
     }
 
     @Override
-    public List<ItemDtoOwner> findUserItems(Long id) {
+    public List<ItemDto> findUserItems(Long id) {
         log.debug("Поиск вещей пользователя с id = {}", id);
         List<Item> items = itemRepository.findByOwnerId(id);
         List<Long> itemIds = items.stream().map(Item::getId).toList();
@@ -54,6 +85,11 @@ public class ItemServiceImpl implements ItemService {
 
         Map<Long, List<Booking>> bookingsGroup = bookings.stream()
                 .collect(Collectors.groupingBy(booking -> booking.getItem().getId()));
+
+        List<Comment> comments = commentRepository.findAllByItemIdIn(itemIds);
+
+        Map<Long, List<Comment>> commentsGroup = comments.stream()
+                .collect(Collectors.groupingBy(comment -> comment.getItem().getId()));
 
         return items.stream()
                 .map(item -> {
@@ -70,16 +106,18 @@ public class ItemServiceImpl implements ItemService {
                             .map(Booking::getEnd)
                             .orElse(null);
 
-                    return itemMapper.mapToItemDtoOwner(item, lastBooking, nextBooking);
+                    List<Comment> comment = commentsGroup.getOrDefault(item.getId(), Collections.emptyList());
+
+                    return itemMapper.mapToItemDto(item, lastBooking, nextBooking, commentMapper.mapToCommentDto(comment));
                 }).toList();
     }
 
     @Override
     public ItemDto addItem(Long userId, ItemDto itemDto) {
         log.debug("Добавление новой вещи: {}", itemDto);
-        checkUser(userId);
+        User user = checkUser(userId);
         Item item = itemMapper.mapToItem(itemDto);
-        item.setOwner(userService.findUser(userId));
+        item.setOwner(user);
         itemRepository.save(item);
         return itemMapper.mapToItemDto(item);
     }
@@ -89,7 +127,7 @@ public class ItemServiceImpl implements ItemService {
         log.debug("Обновление вещи с Id: {}", itemId);
         checkUser(userId);
 
-        Item oldItem = itemMapper.mapToItem(findItem(itemId));
+        Item oldItem = itemMapper.mapToItem(findItem(itemId, userId));
         if (!oldItem.getOwner().getId().equals(userId)) {
             throw new NotFoundException("Обновляемая вещь с id = " + itemId + " не принадлежит " +
                     "указанному пользователю с id = " + userId);
@@ -117,7 +155,24 @@ public class ItemServiceImpl implements ItemService {
         return foundItems.stream().filter(Item::getAvailable).map(itemMapper::mapToItemDto).toList();
     }
 
-    private void checkUser(Long id) {
-        userService.findUser(id);
+    @Override
+    public CommentDto addComment(Comment comment, Long itemId, Long userId) {
+        User user = checkUser(userId);
+        ItemDto item = findItem(itemId, userId);
+
+        List<Booking> bookings = bookingRepository.findAllByBookerIdAndItemIdAndEndBefore(userId, itemId, LocalDateTime.now());
+        if (bookings.isEmpty()) {
+            throw new ValidationException("Пользователь " + userId + " не брал в аренду вещь " + itemId);
+        }
+
+        comment.setAuthor(user);
+        comment.setItem(itemMapper.mapToItem(item));
+        comment.setCreated(LocalDateTime.now());
+        Comment saved = commentRepository.save(comment);
+        return commentMapper.mapToCommentDto(saved);
+    }
+
+    private User checkUser(Long id) {
+        return userService.findUser(id);
     }
 }

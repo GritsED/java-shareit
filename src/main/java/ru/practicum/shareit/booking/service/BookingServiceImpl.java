@@ -38,7 +38,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingDtoOut createBooking(BookingDtoIn bookingDtoIn, long userId) {
         User user = checkUser(userId);
-        ItemDto item = itemService.findItem(bookingDtoIn.getItemId());
+        ItemDto item = itemService.findItem(bookingDtoIn.getItemId(), userId);
         if (!item.getAvailable()) {
             throw new ValidationException("Предмет с Id " + item.getId() + " не доступен для бронирования");
         }
