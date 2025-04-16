@@ -2,15 +2,21 @@ package ru.practicum.shareit.item.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemDtoOwner;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.service.UserService;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -18,11 +24,13 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final ItemMapper itemMapper;
     private final UserService userService;
+    private final BookingRepository bookingRepository;
 
-    public ItemServiceImpl(ItemRepository itemRepository, ItemMapper itemMapper, UserService userService) {
+    public ItemServiceImpl(ItemRepository itemRepository, ItemMapper itemMapper, UserService userService, BookingRepository bookingRepository) {
         this.itemRepository = itemRepository;
         this.itemMapper = itemMapper;
         this.userService = userService;
+        this.bookingRepository = bookingRepository;
     }
 
     @Override
@@ -34,13 +42,36 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<Item> findUserItems(Long id) {
+    public List<ItemDtoOwner> findUserItems(Long id) {
         log.debug("Поиск вещей пользователя с id = {}", id);
         List<Item> items = itemRepository.findByOwnerId(id);
+        List<Long> itemIds = items.stream().map(Item::getId).toList();
+
         if (items.isEmpty()) {
             return Collections.emptyList();
         }
-        return items;
+        List<Booking> bookings = bookingRepository.findAllByItemIdInOrderByStartDesc(itemIds);
+
+        Map<Long, List<Booking>> bookingsGroup = bookings.stream()
+                .collect(Collectors.groupingBy(booking -> booking.getItem().getId()));
+
+        return items.stream()
+                .map(item -> {
+                    List<Booking> bookingList = bookingsGroup.getOrDefault(item.getId(), Collections.emptyList());
+                    LocalDateTime lastBooking = bookingList.stream()
+                            .filter(booking -> booking.getEnd().isBefore(LocalDateTime.now()))
+                            .reduce((first, second) -> second)
+                            .map(Booking::getEnd)
+                            .orElse(null);
+
+                    LocalDateTime nextBooking = bookingList.stream()
+                            .filter(booking -> booking.getStart().isAfter(LocalDateTime.now()))
+                            .findFirst()
+                            .map(Booking::getEnd)
+                            .orElse(null);
+
+                    return itemMapper.mapToItemDtoOwner(item, lastBooking, nextBooking);
+                }).toList();
     }
 
     @Override
