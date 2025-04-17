@@ -2,7 +2,6 @@ package ru.practicum.shareit.item.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingConstants;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
@@ -10,7 +9,7 @@ import ru.practicum.shareit.item.model.Item;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+@Mapper
 public interface ItemMapper {
     @Mapping(source = "ownerId", target = "owner.id")
     Item mapToItem(ItemDto itemDto);

@@ -1,10 +1,11 @@
 package ru.practicum.shareit.user.service;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.exception.ConflictException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
@@ -14,21 +15,19 @@ import java.util.List;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
-        this.userRepository = userRepository;
-        this.userMapper = userMapper;
-    }
-
     @Override
     @Transactional
     public UserDto createUser(User user) {
         log.debug("Создание нового пользователя: {}", user);
-        checkEmailExist(user);
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            throw new ValidationException("Почта должна быть указана");
+        }
         User newUser = userRepository.save(user);
         log.debug("Пользователь с Id {} создан", newUser.getId());
         return userMapper.mapToUserDto(newUser);
@@ -62,7 +61,6 @@ public class UserServiceImpl implements UserService {
         }
 
         if (newUser.getEmail() != null && !newUser.getEmail().isBlank()) {
-            checkEmailExist(newUser);
             oldUser.setEmail(newUser.getEmail());
         }
 
@@ -75,14 +73,5 @@ public class UserServiceImpl implements UserService {
     public void removeUser(Long userId) {
         log.debug("Удаление пользователя с id = {}", userId);
         userRepository.deleteById(userId);
-    }
-
-    private void checkEmailExist(User user) {
-        findAll().forEach(u -> {
-            if (u.getEmail().equals(user.getEmail()) && !u.getId().equals(user.getId())) {
-                log.error("Данный email = {} уже занят", user.getEmail());
-                throw new ConflictException("Данный email занят");
-            }
-        });
     }
 }

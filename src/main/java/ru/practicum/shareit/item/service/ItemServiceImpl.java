@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item.service;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.emun.BookingStatus;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final ItemMapper itemMapper;
@@ -33,20 +35,6 @@ public class ItemServiceImpl implements ItemService {
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
-
-    public ItemServiceImpl(ItemRepository itemRepository,
-                           ItemMapper itemMapper,
-                           UserService userService,
-                           BookingRepository bookingRepository,
-                           CommentRepository commentRepository,
-                           CommentMapper commentMapper) {
-        this.itemRepository = itemRepository;
-        this.itemMapper = itemMapper;
-        this.userService = userService;
-        this.bookingRepository = bookingRepository;
-        this.commentRepository = commentRepository;
-        this.commentMapper = commentMapper;
-    }
 
     @Override
     public ItemDto findItem(Long id, Long userId) {
