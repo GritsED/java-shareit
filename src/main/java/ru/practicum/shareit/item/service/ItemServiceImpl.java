@@ -43,21 +43,24 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException("Предмет с Id " + id + " не найден"));
         List<Comment> comments = commentRepository.findAllByItemId(id);
 
+        LocalDateTime lastBooking = null;
+        LocalDateTime nextBooking = null;
+
         if (item.getOwner().getId().equals(userId)) {
-            List<Booking> lastBookings = bookingRepository.findAllByItemIdAndEndBeforeAndStatusOrderByEndDesc(id,
-                    LocalDateTime.now(),
-                    BookingStatus.APPROVED);
+            lastBooking = bookingRepository.findAllByItemIdAndEndBeforeAndStatusOrderByEndDesc(id,
+                            LocalDateTime.now(),
+                            BookingStatus.APPROVED)
+                    .stream()
+                    .findFirst()
+                    .map(Booking::getEnd)
+                    .orElse(null);
 
-            LocalDateTime lastBooking = lastBookings.isEmpty() ? null : lastBookings.getFirst().getEnd();
-
-            List<Booking> nextBookings = bookingRepository.findAllByItemIdAndStartAfterOrderByStartAsc(id,
-                    LocalDateTime.now());
-
-            LocalDateTime nextBooking = nextBookings.isEmpty() ? null : nextBookings.getFirst().getStart();
-
-            return itemMapper.mapToItemDto(item, lastBooking, nextBooking, commentMapper.mapToCommentDto(comments));
+            nextBooking = bookingRepository.findFirstByItemIdAndStartAfterOrderByStartAsc(id,
+                            LocalDateTime.now())
+                    .map(Booking::getStart)
+                    .orElse(null);
         }
-        return itemMapper.mapToItemDto(item, null, null, commentMapper.mapToCommentDto(comments));
+        return itemMapper.mapToItemDto(item, lastBooking, nextBooking, commentMapper.mapToCommentDto(comments));
     }
 
     @Override

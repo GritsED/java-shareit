@@ -43,6 +43,6 @@ public class ErrorHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleDataIntegrityViolation(DataIntegrityViolationException e) {
-        return new ErrorResponse("Почта уже используется другим пользователем.");
+        return new ErrorResponse("Ошибка сохранения данных.");
     }
 }
