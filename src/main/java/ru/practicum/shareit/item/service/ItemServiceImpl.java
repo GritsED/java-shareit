@@ -47,11 +47,9 @@ public class ItemServiceImpl implements ItemService {
         LocalDateTime nextBooking = null;
 
         if (item.getOwner().getId().equals(userId)) {
-            lastBooking = bookingRepository.findAllByItemIdAndEndBeforeAndStatusOrderByEndDesc(id,
+            lastBooking = bookingRepository.findFirstByItemIdAndEndBeforeAndStatusOrderByEndDesc(id,
                             LocalDateTime.now(),
                             BookingStatus.APPROVED)
-                    .stream()
-                    .findFirst()
                     .map(Booking::getEnd)
                     .orElse(null);
 
