@@ -6,7 +6,7 @@ import ru.practicum.shareit.user.model.User;
 import java.util.List;
 
 public interface UserService {
-    UserDto createUser(UserDto userDto);
+    UserDto createUser(User user);
 
     List<UserDto> findAll();
 

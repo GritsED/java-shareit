@@ -1,0 +1,28 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      format_sql: true
+  sql.init.mode: never
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/shareitdb
+    username: dbuser
+    password: 12345
+
+logging:
+  level:
+    root: INFO
+    ru.practicum: DEBUG
+    org:
+      type.descriptor.sql.BasicBinder: INFO
+      springframework:
+        orm:
+          jpa: INFO
+          jpa.JpaTransactionManager: INFO
+        transaction: INFO
+        transaction.interceptor: INFO
+
+
