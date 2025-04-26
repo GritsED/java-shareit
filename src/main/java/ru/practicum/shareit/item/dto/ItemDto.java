@@ -20,9 +20,10 @@ public class ItemDto {
     String name;
     @NotBlank(message = "Описание не может быть пустым")
     String description;
-    @NotNull(message = "Поле \"available\" не может быть пустым")
+    @NotNull(message = "Поле available не может быть пустым")
     Boolean available;
     Long ownerId;
+    Long requestId;
     List<CommentDto> comments;
     LocalDateTime lastBooking;
     LocalDateTime nextBooking;
