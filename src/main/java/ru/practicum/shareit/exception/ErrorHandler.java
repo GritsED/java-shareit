@@ -32,7 +32,7 @@ public class ErrorHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidate(final MethodArgumentNotValidException e) {
-        return new ErrorResponse(e.getMessage());
+        return new ErrorResponse(e.getBindingResult().getFieldErrors().get(0).getDefaultMessage());
     }
 
     @ExceptionHandler
