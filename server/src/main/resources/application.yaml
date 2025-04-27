@@ -7,16 +7,17 @@ spring:
     show-sql: true
     properties:
       format_sql: true
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
   sql.init.mode: never
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/shareitdb
-    username: dbuser
-    password: 12345
+    url: jdbc:postgresql://localhost:5432/shareit
+    username: shareit
+    password: shareit
 
 logging:
   level:
-    root: INFO
+    root: DEBUG
     ru.practicum: DEBUG
     org:
       type.descriptor.sql.BasicBinder: INFO

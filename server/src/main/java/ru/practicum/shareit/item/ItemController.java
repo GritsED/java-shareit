@@ -7,7 +7,6 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.service.ItemService;
 
-import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -29,7 +28,7 @@ public class ItemController {
 
     @GetMapping("/search")
     public List<ItemDto> searchItems(@RequestParam(required = false) final String text) {
-            return itemService.searchItems(text);
+        return itemService.searchItems(text);
     }
 
     @PostMapping
