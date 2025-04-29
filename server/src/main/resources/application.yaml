@@ -17,7 +17,7 @@ spring:
 
 logging:
   level:
-    root: DEBUG
+    root: INFO
     ru.practicum: DEBUG
     org:
       type.descriptor.sql.BasicBinder: INFO

@@ -14,7 +14,7 @@ import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.service.UserService;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,7 +24,7 @@ import java.util.List;
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final BookingMapper bookingMapper;
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final ItemRepository itemRepository;
 
     @Override
@@ -123,13 +123,12 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private User checkUser(Long id) {
-        return userService.findUser(id);
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
     }
 
     private Booking checkBooking(Long id) {
         return bookingRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Бронирование с Id " + id + " не найдено"));
     }
-
-
 }

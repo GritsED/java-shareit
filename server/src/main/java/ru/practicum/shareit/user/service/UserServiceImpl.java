@@ -22,12 +22,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDto createUser(User user) {
-        log.debug("Создание нового пользователя: {}", user);
-//        if (user.getEmail() == null || user.getEmail().isBlank()) {
-//            throw new ValidationException("Почта должна быть указана");
-//        }
-        User newUser = userRepository.save(user);
+    public UserDto createUser(UserDto userDto) {
+        log.debug("Создание нового пользователя: {}", userDto);
+        User userToCreate = userMapper.mapToUser(userDto);
+
+        User newUser = userRepository.save(userToCreate);
         log.debug("Пользователь с Id {} создан", newUser.getId());
         return userMapper.mapToUserDto(newUser);
     }
@@ -39,21 +38,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findUser(Long userId) {
+    public UserDto findUser(Long userId) {
         log.debug("Поиск пользователя с Id {}", userId);
-        return userRepository.findById(userId).orElseThrow(
-                () -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+        return userMapper.mapToUserDto(user);
     }
 
     @Override
     @Transactional
-    public UserDto updateUser(User newUser, Long userId) {
+    public UserDto updateUser(UserDto newUser, Long userId) {
         log.debug("Обновление пользователя с id = {}", userId);
-//        if (userId == null) {
-//            log.warn("Ошибка обновления пользователя: Id не указан");
-//            throw new IllegalArgumentException("Id должен быть указан.");
-//        }
-        User oldUser = findUser(userId);
+        User oldUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
         if (newUser.getName() != null && !newUser.getName().isBlank()) {
             oldUser.setName(newUser.getName());

@@ -19,7 +19,7 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.service.UserService;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final ItemMapper itemMapper;
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
@@ -148,9 +148,6 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDto> searchItems(String text) {
         log.debug("Поиск доступной вещи по названию или описанию {}", text);
-        if (text == null || text.isBlank()) {
-            return Collections.emptyList();
-        }
         List<Item> foundItems = itemRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(text, text);
         return foundItems.stream().filter(Item::getAvailable).map(itemMapper::mapToItemDto).toList();
     }
@@ -164,7 +161,6 @@ public class ItemServiceImpl implements ItemService {
         if (bookings.isEmpty()) {
             throw new ValidationException("Пользователь " + userId + " не брал в аренду вещь " + itemId);
         }
-
         comment.setAuthor(user);
         comment.setItem(itemMapper.mapToItem(item));
         comment.setCreated(LocalDateTime.now());
@@ -173,6 +169,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private User checkUser(Long id) {
-        return userService.findUser(id);
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
     }
 }

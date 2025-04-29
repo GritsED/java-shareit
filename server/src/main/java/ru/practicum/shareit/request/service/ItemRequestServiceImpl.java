@@ -13,7 +13,7 @@ import ru.practicum.shareit.request.mapper.ItemRequestMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.service.UserService;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 public class ItemRequestServiceImpl implements ItemRequestService {
 
     private final ItemRequestMapper itemRequestMapper;
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final ItemRequestRepository itemRequestRepository;
     private final ItemRepository itemRepository;
     private final ItemMapper itemMapper;
@@ -35,7 +35,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     public ItemRequestDto create(ItemRequestDto dto, Long userId) {
         log.debug("Запрос на создание запроса вещи от пользователя {}", userId);
-        User user = userService.findUser(userId);
+        User user = checkUser(userId);
 
         ItemRequest itemRequest = itemRequestMapper.mapToEntity(dto);
 
@@ -50,7 +50,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     public List<ItemRequestDto> getUserRequests(Long userId) {
         log.debug("Получен запрос на просмотр запросов вещей пользователя: {}", userId);
-        userService.findUser(userId);
+        checkUser(userId);
         List<ItemRequest> userRequests = itemRequestRepository.findByOwnerIdOrderByCreatedDesc(userId);
         return getRequestsItems(userRequests);
     }
@@ -58,14 +58,14 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     public List<ItemRequestDto> getAllRequests(Long userId) {
         log.debug("Получен запрос на получение всех запросов вещей");
-        userService.findUser(userId);
+        checkUser(userId);
         List<ItemRequest> userRequests = itemRequestRepository.findByOwnerIdNotOrderByCreatedDesc(userId);
         return getRequestsItems(userRequests);
     }
 
     @Override
     public ItemRequestDto getRequestById(Long userId, Long requestId) {
-        userService.findUser(userId);
+        checkUser(userId);
 
         ItemRequestDto itemRequestDto = itemRequestRepository.findById(requestId)
                 .map(itemRequestMapper::mapToItemRequestDto)
@@ -103,5 +103,10 @@ public class ItemRequestServiceImpl implements ItemRequestService {
                     return itemRequestDto;
                 })
                 .toList();
+    }
+
+    private User checkUser(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
     }
 }

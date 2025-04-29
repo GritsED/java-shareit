@@ -3,7 +3,7 @@ package ru.practicum.shareit.request;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
-import ru.practicum.shareit.request.service.ItemRequestServiceImpl;
+import ru.practicum.shareit.request.service.ItemRequestService;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ItemRequestController {
 
-    private final ItemRequestServiceImpl itemRequestService;
+    private final ItemRequestService itemRequestService;
 
     @PostMapping
     ItemRequestDto create(@RequestBody ItemRequestDto dto,
