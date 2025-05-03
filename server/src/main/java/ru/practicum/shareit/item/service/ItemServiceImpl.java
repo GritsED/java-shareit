@@ -2,6 +2,8 @@ package ru.practicum.shareit.item.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.emun.BookingStatus;
 import ru.practicum.shareit.booking.model.Booking;
@@ -65,14 +67,16 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> findUserItems(Long id) {
+    public List<ItemDto> findUserItems(Long id, Integer from, Integer size) {
         log.debug("Поиск вещей пользователя с id = {}", id);
-        List<Item> items = itemRepository.findByOwnerId(id);
-        List<Long> itemIds = items.stream().map(Item::getId).toList();
+        Pageable page = PageRequest.of(from > 0 ? from / size : 0, size);
+        List<Item> items = itemRepository.findByOwnerId(id, page).getContent();
 
         if (items.isEmpty()) {
             return Collections.emptyList();
         }
+
+        List<Long> itemIds = items.stream().map(Item::getId).toList();
         List<Booking> bookings = bookingRepository.findAllByItemIdInOrderByStartDesc(itemIds);
 
         Map<Long, List<Booking>> bookingsGroup = bookings.stream()

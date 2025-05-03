@@ -121,7 +121,7 @@ class BookingControllerTest {
 
     @Test
     void getAllBookings() throws Exception {
-        when(bookingService.findAll(anyLong(), anyString())).thenReturn(bookingDtoOutList);
+        when(bookingService.findAll(anyLong(), anyString(), any(), any())).thenReturn(bookingDtoOutList);
 
         mvc.perform(get("/bookings")
                         .queryParam("state", "ALL")

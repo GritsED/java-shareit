@@ -79,7 +79,7 @@ class ItemRequestControllerTest {
 
     @Test
     void getRequests() throws Exception {
-        when(itemRequestService.getAllRequests(anyLong())).thenReturn(itemRequestDtos);
+        when(itemRequestService.getAllRequests(anyLong(), any(), any())).thenReturn(itemRequestDtos);
 
         mvc.perform(get("/requests/all")
                         .header("X-Sharer-User-Id", 1L))

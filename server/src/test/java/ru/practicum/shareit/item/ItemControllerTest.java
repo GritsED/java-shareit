@@ -80,7 +80,7 @@ class ItemControllerTest {
 
     @Test
     void getItemsByUserid() throws Exception {
-        when(itemService.findUserItems(anyLong())).thenReturn(items);
+        when(itemService.findUserItems(anyLong(), any(), any())).thenReturn(items);
 
         mvc.perform(get("/items")
                         .header("X-Sharer-User-Id", 1L))

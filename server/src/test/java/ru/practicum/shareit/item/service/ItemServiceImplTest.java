@@ -5,6 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import ru.practicum.shareit.booking.emun.BookingStatus;
 import ru.practicum.shareit.booking.model.Booking;
@@ -37,6 +41,9 @@ import static org.mockito.Mockito.when;
 @Import(ItemServiceImpl.class)
 class ItemServiceImplTest {
 
+    Pageable pageable;
+    int from = 0;
+    int size = 10;
     @MockBean
     private ItemRepository itemRepository;
     @MockBean
@@ -53,7 +60,6 @@ class ItemServiceImplTest {
     private ItemRequestRepository itemRequestRepository;
     @Autowired
     private ItemService itemService;
-
     private User owner;
     private User booker;
     private Item item;
@@ -67,7 +73,7 @@ class ItemServiceImplTest {
     void setUp() {
         owner = new User(1L, "Owner", "owner@mail.com");
         booker = new User(2L, "User", "user@mail.com");
-
+        pageable = PageRequest.of(from / size, size);
         now = LocalDateTime.now();
 
         item = Item.builder()
@@ -165,15 +171,15 @@ class ItemServiceImplTest {
 
     @Test
     void findUserItems_whenUserHasItem_shouldReturnDtoWithNullBookings() {
-        List<Item> items = List.of(item);
-        when(itemRepository.findByOwnerId(any())).thenReturn(items);
+        Page<Item> items = new PageImpl<>(List.of(item));
+        when(itemRepository.findByOwnerId(any(), any())).thenReturn(items);
         when(bookingRepository.findAllByItemIdInOrderByStartDesc(anyList())).thenReturn(Collections.emptyList());
         when(commentRepository.findAllByItemIdIn(List.of(1L))).thenReturn(Collections.emptyList());
         when(commentMapper.mapToCommentDto(Collections.emptyList())).thenReturn(Collections.emptyList());
         when(itemMapper.mapToItemDto(any(), isNull(), isNull(), anyList()))
                 .thenReturn(expectedDto);
 
-        List<ItemDto> result = itemService.findUserItems(1L);
+        List<ItemDto> result = itemService.findUserItems(1L, 0, 10);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -182,9 +188,9 @@ class ItemServiceImplTest {
 
     @Test
     void findUserItems_whenUserHasNoItems_shouldReturnEmptyList() {
-        when(itemRepository.findByOwnerId(any())).thenReturn(Collections.emptyList());
+        when(itemRepository.findByOwnerId(any(), any())).thenReturn(Page.empty());
 
-        List<ItemDto> result = itemService.findUserItems(1L);
+        List<ItemDto> result = itemService.findUserItems(1L, 0, 10);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());

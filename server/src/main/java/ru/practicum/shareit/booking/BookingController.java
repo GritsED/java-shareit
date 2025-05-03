@@ -1,5 +1,7 @@
 package ru.practicum.shareit.booking;
 
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingDtoIn;
@@ -35,8 +37,10 @@ public class BookingController {
 
     @GetMapping
     public List<BookingDtoOut> getAllBookings(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                              @RequestParam(defaultValue = "ALL") String state) {
-        return bookingService.findAll(userId, state);
+                                              @RequestParam(defaultValue = "ALL") String state,
+                                              @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
+                                              @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
+        return bookingService.findAll(userId, state, from, size);
     }
 
     @GetMapping("/owner")

@@ -9,7 +9,7 @@ import java.util.List;
 public interface ItemService {
     ItemDto findItem(Long id, Long userId);
 
-    List<ItemDto> findUserItems(Long id);
+    List<ItemDto> findUserItems(Long id, Integer from, Integer size);
 
     ItemDto addItem(Long userId, ItemDto itemDto);
 

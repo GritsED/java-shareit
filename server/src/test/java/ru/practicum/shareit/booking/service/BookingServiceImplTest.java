@@ -5,6 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import ru.practicum.shareit.booking.dto.BookingDtoIn;
 import ru.practicum.shareit.booking.dto.BookingDtoOut;
@@ -27,14 +31,16 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SpringJUnitConfig
 @Import(BookingServiceImpl.class)
 class BookingServiceImplTest {
+    Pageable pageable;
+    int from = 0;
+    int size = 10;
     @MockBean
     private BookingRepository bookingRepository;
     @MockBean
@@ -45,7 +51,6 @@ class BookingServiceImplTest {
     private ItemRepository itemRepository;
     @Autowired
     private BookingService bookingService;
-
     private BookingDtoIn bookingDtoIn;
     private Booking booking;
     private BookingDtoOut bookingDtoOut;
@@ -60,6 +65,7 @@ class BookingServiceImplTest {
         Long itemId = 2L;
         LocalDateTime start = LocalDateTime.now().plusDays(1);
         LocalDateTime end = start.plusDays(1);
+        pageable = PageRequest.of(from / size, size);
 
         user = User.builder()
                 .id(userId)
@@ -262,14 +268,13 @@ class BookingServiceImplTest {
 
     @Test
     void findAll_shouldReturnList_forDefaultState() {
-        List<Booking> bookings = Collections.singletonList(booking);
-        List<BookingDtoOut> dtoList = Collections.singletonList(bookingDtoOut);
+        Page<Booking> bookings = new PageImpl<>(List.of(booking));
 
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        when(bookingRepository.findAllByBookerId(user.getId())).thenReturn(bookings);
-        when(bookingMapper.mapToBookingDto(bookings)).thenReturn(dtoList);
+        when(bookingRepository.findAllByBookerId(user.getId(), pageable)).thenReturn(bookings);
+        when(bookingMapper.mapToBookingDto(booking)).thenReturn(bookingDtoOut);
 
-        List<BookingDtoOut> result = bookingService.findAll(user.getId(), "ALL");
+        List<BookingDtoOut> result = bookingService.findAll(user.getId(), "ALL", from, size);
 
         assertEquals(1, result.size());
         assertEquals(bookingDtoOut, result.get(0));
@@ -277,15 +282,15 @@ class BookingServiceImplTest {
 
     @Test
     void findAll_shouldReturnList_forCurrentState() {
-        List<Booking> bookings = Collections.singletonList(booking);
+        Page<Booking> bookings = new PageImpl<>(List.of(booking));
         List<BookingDtoOut> dtoList = Collections.singletonList(bookingDtoOut);
 
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        when(bookingRepository.findAllByBookerIdAndEndAfterOrderByStartDesc(anyLong(), any(LocalDateTime.class)))
+        when(bookingRepository.findAllByBookerIdAndEndAfterOrderByStartDesc(anyLong(), any(LocalDateTime.class), eq(pageable)))
                 .thenReturn(bookings);
-        when(bookingMapper.mapToBookingDto(bookings)).thenReturn(dtoList);
+        when(bookingMapper.mapToBookingDto(booking)).thenReturn(bookingDtoOut);
 
-        List<BookingDtoOut> result = bookingService.findAll(user.getId(), "CURRENT");
+        List<BookingDtoOut> result = bookingService.findAll(user.getId(), "CURRENT", from, size);
 
         assertEquals(1, result.size());
         assertEquals(bookingDtoOut, result.get(0));

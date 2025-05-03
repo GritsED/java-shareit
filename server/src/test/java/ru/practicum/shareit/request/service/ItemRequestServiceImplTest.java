@@ -5,6 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -32,24 +36,21 @@ import static org.mockito.Mockito.when;
 @Import(ItemRequestServiceImpl.class)
 class ItemRequestServiceImplTest {
 
+    Pageable pageable;
+    int from = 0;
+    int size = 10;
     @MockBean
     private ItemRequestMapper itemRequestMapper;
-
     @MockBean
     private UserRepository userRepository;
-
     @MockBean
     private ItemRequestRepository itemRequestRepository;
-
     @MockBean
     private ItemRepository itemRepository;
-
     @MockBean
     private ItemMapper itemMapper;
-
     @Autowired
     private ItemRequestServiceImpl itemRequestService;
-
     private User user;
     private ItemRequestDto requestDto;
     private ItemRequest request;
@@ -60,6 +61,7 @@ class ItemRequestServiceImplTest {
     @BeforeEach
     void setUp() {
         user = User.builder().id(1L).name("User").email("u@mail.com").build();
+        pageable = PageRequest.of(from / size, size);
 
         requestDto = ItemRequestDto.builder()
                 .description("Need item")
@@ -141,10 +143,10 @@ class ItemRequestServiceImplTest {
     @Test
     void getAllRequests_shouldReturnEmptyList_whenNoOtherRequests() {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        when(itemRequestRepository.findByOwnerIdNotOrderByCreatedDesc(user.getId()))
-                .thenReturn(Collections.emptyList());
+        when(itemRequestRepository.findByOwnerIdNotOrderByCreatedDesc(user.getId(), pageable))
+                .thenReturn(Page.empty());
 
-        List<ItemRequestDto> result = itemRequestService.getAllRequests(user.getId());
+        List<ItemRequestDto> result = itemRequestService.getAllRequests(user.getId(), from, size);
 
         assertTrue(result.isEmpty());
     }
@@ -152,14 +154,14 @@ class ItemRequestServiceImplTest {
     @Test
     void getAllRequests_shouldReturnMappedList() {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        when(itemRequestRepository.findByOwnerIdNotOrderByCreatedDesc(user.getId()))
-                .thenReturn(List.of(request));
+        when(itemRequestRepository.findByOwnerIdNotOrderByCreatedDesc(user.getId(), pageable))
+                .thenReturn(new PageImpl<>(List.of(request)));
         when(itemRepository.findAllByRequestIdIn(List.of(request.getId())))
                 .thenReturn(List.of(item));
         when(itemMapper.mapToItemDto(item)).thenReturn(itemDto);
         when(itemRequestMapper.mapToItemRequestDto(request)).thenReturn(mappedDto);
 
-        List<ItemRequestDto> result = itemRequestService.getAllRequests(user.getId());
+        List<ItemRequestDto> result = itemRequestService.getAllRequests(user.getId(), from, size);
 
         assertEquals(1, result.size());
         assertEquals(itemDto, result.get(0).getItems().get(0));

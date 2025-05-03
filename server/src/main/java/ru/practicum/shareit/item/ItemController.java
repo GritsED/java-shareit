@@ -1,5 +1,7 @@
 package ru.practicum.shareit.item;
 
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
@@ -22,8 +24,10 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDto> getItemsByUserid(@RequestHeader("X-Sharer-User-Id") Long userId) {
-        return itemService.findUserItems(userId);
+    public List<ItemDto> getItemsByUserid(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                          @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
+                                          @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
+        return itemService.findUserItems(userId, from, size);
     }
 
     @GetMapping("/search")

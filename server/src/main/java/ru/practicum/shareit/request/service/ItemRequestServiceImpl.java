@@ -2,6 +2,8 @@ package ru.practicum.shareit.request.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -56,10 +58,11 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
-    public List<ItemRequestDto> getAllRequests(Long userId) {
+    public List<ItemRequestDto> getAllRequests(Long userId, Integer from, Integer size) {
         log.debug("Получен запрос на получение всех запросов вещей");
         checkUser(userId);
-        List<ItemRequest> userRequests = itemRequestRepository.findByOwnerIdNotOrderByCreatedDesc(userId);
+        Pageable page = PageRequest.of(from > 0 ? from / size : 0, size);
+        List<ItemRequest> userRequests = itemRequestRepository.findByOwnerIdNotOrderByCreatedDesc(userId, page).getContent();
         return getRequestsItems(userRequests);
     }
 
