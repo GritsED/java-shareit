@@ -1,0 +1,31 @@
+server:
+  port: 9090
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      format_sql: true
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+  sql.init.mode: never
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/shareit
+    username: shareit
+    password: shareit
+
+logging:
+  level:
+    root: INFO
+    ru.practicum: DEBUG
+    org:
+      type.descriptor.sql.BasicBinder: INFO
+      springframework:
+        orm:
+          jpa: INFO
+          jpa.JpaTransactionManager: INFO
+        transaction: INFO
+        transaction.interceptor: INFO
+
+
