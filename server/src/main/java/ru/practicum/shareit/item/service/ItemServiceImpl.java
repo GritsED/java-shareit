@@ -158,6 +158,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public CommentDto addComment(Comment comment, Long itemId, Long userId) {
+        log.debug("Пытаемся добавить комментарий {} . userId={}, itemId={}", comment, userId, itemId);
         User user = checkUser(userId);
         ItemDto item = findItem(itemId, userId);
 
@@ -169,6 +170,7 @@ public class ItemServiceImpl implements ItemService {
         comment.setItem(itemMapper.mapToItem(item));
         comment.setCreated(LocalDateTime.now());
         Comment saved = commentRepository.save(comment);
+        log.debug("Комментарий успешно сохранён. id={}", saved.getId());
         return commentMapper.mapToCommentDto(saved);
     }
 

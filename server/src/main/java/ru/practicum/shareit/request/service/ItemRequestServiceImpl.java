@@ -68,6 +68,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public ItemRequestDto getRequestById(Long userId, Long requestId) {
+        log.debug("Начинается получение запроса с id {} для пользователя {}", requestId, userId);
         checkUser(userId);
 
         ItemRequestDto itemRequestDto = itemRequestRepository.findById(requestId)
@@ -79,11 +80,14 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
         itemRequestDto.setItems(items);
 
+        log.debug("Запрос с id {} успешно получен, количество связанных предметов: {}", requestId, items.size());
         return itemRequestDto;
     }
 
     private List<ItemRequestDto> getRequestsItems(List<ItemRequest> requests) {
+        log.debug("Начинается обработка списка запросов, количество: {}", requests.size());
         if (requests.isEmpty()) {
+            log.debug("Список запросов пуст, возвращаем пустой результат");
             return Collections.emptyList();
         }
         List<Long> requestIds = requests.stream().map(ItemRequest::getId).toList();
@@ -93,7 +97,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         Map<Long, List<Item>> itemsGroup = items.stream()
                 .collect(Collectors.groupingBy(item -> item.getRequest().getId()));
 
-        return requests.stream()
+        List<ItemRequestDto> result = requests.stream()
                 .map(itemRequest -> {
                     List<Item> itemsList = itemsGroup.getOrDefault(itemRequest.getId(), Collections.emptyList());
 
@@ -106,6 +110,8 @@ public class ItemRequestServiceImpl implements ItemRequestService {
                     return itemRequestDto;
                 })
                 .toList();
+        log.debug("Обработка запросов завершена, всего объектов возвращено: {}", result.size());
+        return result;
     }
 
     private User checkUser(Long id) {
